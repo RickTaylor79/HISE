@@ -425,6 +425,14 @@ template <typename DataType, CloneProcessType ProcessType>
 		constexpr int NumChannels = P;
 
         bool shouldCopy = getProcessType() == CloneProcessType::Copy;
+
+		auto requiredBufferSize = NumChannels * d.getNumSamples();
+
+        if (workBuffer.size() < requiredBufferSize)
+            workBuffer.setSize(requiredBufferSize);
+
+        if (shouldCopy && originalBuffer.size() < requiredBufferSize)
+            originalBuffer.setSize(requiredBufferSize);
         
         if(shouldCopy)
         {

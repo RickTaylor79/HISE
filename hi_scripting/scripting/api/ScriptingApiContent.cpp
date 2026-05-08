@@ -3300,7 +3300,23 @@ void ScriptingApi::Content::ComplexDataScriptComponent::restoreFromValueTree(con
 	ScriptComponent::restoreFromValueTree(v);
 
 	if (cachedObjectReference != nullptr)
-		cachedObjectReference->fromBase64String(v.getProperty("data", String()));
+	{
+		auto dataString = v.getProperty("data", String()).toString();
+		auto target = cachedObjectReference;
+
+		if (MessageManager::getInstance()->isThisTheMessageThread())
+		{
+			target->fromBase64String(dataString);
+		}
+		else
+		{
+			MessageManager::callAsync([target, dataString]()
+			{
+				if (target != nullptr)
+					target->fromBase64String(dataString);
+			});
+		}
+	}
 }
 
 void ScriptingApi::Content::ComplexDataScriptComponent::handleDefaultDeactivatedProperties()

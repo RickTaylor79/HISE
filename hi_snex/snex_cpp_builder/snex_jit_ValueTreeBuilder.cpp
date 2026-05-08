@@ -3181,7 +3181,7 @@ bool needsMatrix(const ValueTree& nodeTree)
 	// Check if multiple data types are defined
 	ExternalData::forEachType([&](ExternalData::DataType t)
 	{
-		int num = ValueTreeIterator::getNumDataTypes(nodeTree, t);
+		int num = t == ExternalData::DataType::DisplayBuffer ? 0 : ValueTreeIterator::getNumDataTypes(nodeTree, t);
 
 		if (num == 0)
 			return;
@@ -3198,6 +3198,9 @@ bool needsMatrix(const ValueTree& nodeTree)
 
 	if (multipleDataTypes)
 		return true;
+
+	if (numThisTime == -1)
+		return false;
 
 	for (int i = 0; i < numThisTime; i++)
 	{
@@ -3230,7 +3233,8 @@ Node::Ptr ValueTreeBuilder::ComplexDataBuilder::parseMatrixDataNode()
 
 	ExternalData::forEachType([&](ExternalData::DataType t)
 	{
-		numMax = jmax(numMax, ValueTreeIterator::getNumDataTypes(n->nodeTree, t));
+		auto num = t == ExternalData::DataType::DisplayBuffer ? 0 : ValueTreeIterator::getNumDataTypes(n->nodeTree, t);
+		numMax = jmax(numMax, num);
 	});
 
 
@@ -3242,7 +3246,7 @@ Node::Ptr ValueTreeBuilder::ComplexDataBuilder::parseMatrixDataNode()
 	ExternalData::forEachType([&](ExternalData::DataType t)
 	{
 		String l;
-		auto num = ValueTreeIterator::getNumDataTypes(n->nodeTree, t);
+		auto num = t == ExternalData::DataType::DisplayBuffer ? 0 : ValueTreeIterator::getNumDataTypes(n->nodeTree, t);
 		l << "static const int " << ExternalData::getNumIdentifier(t) << " = " << num << ";";
 		parent << l;
 	});
@@ -3262,7 +3266,7 @@ Node::Ptr ValueTreeBuilder::ComplexDataBuilder::parseMatrixDataNode()
 
 		auto getCell = [&](ExternalData::DataType t, int column)
 		{
-			auto numSlots = ValueTreeIterator::getNumDataTypes(n->nodeTree, t);
+			auto numSlots = t == ExternalData::DataType::DisplayBuffer ? 0 : ValueTreeIterator::getNumDataTypes(n->nodeTree, t);
 
 			if (column >= numSlots)
 				return -1;
@@ -3270,7 +3274,12 @@ Node::Ptr ValueTreeBuilder::ComplexDataBuilder::parseMatrixDataNode()
 			auto slotIndex = ValueTreeIterator::getDataIndex(n->nodeTree, t, column);
 
 			if (slotIndex == -1)
+			{
+				if (getEmbeddedData(n->nodeTree, t, column).isEmpty())
+					return -1;
+
 				return 1000 + embeddedCounter++;
+			}
 
 			return slotIndex;
 		};
@@ -3355,6 +3364,11 @@ Node::Ptr ValueTreeBuilder::ComplexDataBuilder::parseMatrixDataNode()
 		def << " };";
 
 		parent << def;
+	}
+	else
+	{
+		parent.addEmptyLine();
+		parent << "const span<dyn<float>, 0> embeddedData = { };";
 	}
 
 	s.flushIfNot();

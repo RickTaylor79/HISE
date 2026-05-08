@@ -168,6 +168,14 @@ template <class ParameterClass, typename... Processors> struct split : public co
 	{
 		if (N > 1)
 		{
+			auto requiredBufferSize = NumChannels * d.getNumSamples();
+
+			if (originalBuffer.size() < requiredBufferSize)
+				originalBuffer.setSize(requiredBufferSize);
+
+			if (workBuffer.size() < requiredBufferSize)
+				workBuffer.setSize(requiredBufferSize);
+
 			// If this fires, you don't have called prepare yet...
 			jassert(!originalBuffer.isEmpty());
 			jassert(!workBuffer.isEmpty());
