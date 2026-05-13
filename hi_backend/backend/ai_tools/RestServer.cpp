@@ -438,10 +438,10 @@ public:
 
             switch (method)
             {
-                case Method::Get:    server->Get(pathStr, wrappedHandler); break;
-                case Method::Post:   server->Post(pathStr, wrappedHandler); break;
-                case Method::Put:    server->Put(pathStr, wrappedHandler); break;
-                case Method::Delete: server->Delete(pathStr, wrappedHandler); break;
+                case Method::Get:        server->Get(pathStr, wrappedHandler); break;
+                case Method::Post:       server->Post(pathStr, wrappedHandler); break;
+                case Method::Put:        server->Put(pathStr, wrappedHandler); break;
+                case Method::HttpDelete: server->Delete(pathStr, wrappedHandler); break;
             }
         }
 
@@ -524,10 +524,10 @@ private:
         String methodStr;
         switch (routeInfo.method)
         {
-            case Method::Get:    methodStr = "GET"; break;
-            case Method::Post:   methodStr = "POST"; break;
-            case Method::Put:    methodStr = "PUT"; break;
-            case Method::Delete: methodStr = "DELETE"; break;
+            case Method::Get:        methodStr = "GET"; break;
+            case Method::Post:       methodStr = "POST"; break;
+            case Method::Put:        methodStr = "PUT"; break;
+            case Method::HttpDelete: methodStr = "DELETE"; break;
         }
         
         listeners.call(&RestServer::Listener::requestReceived, methodStr, String(req.path));

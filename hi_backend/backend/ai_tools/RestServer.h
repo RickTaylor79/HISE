@@ -447,7 +447,7 @@ public:
     static constexpr int TestPort = 1901;
     
     //==============================================================================
-    enum class Method { Get, Post, Put, Delete };
+    enum class Method { Get, Post, Put, HttpDelete };
 
     //==============================================================================
     /** Represents an incoming HTTP request. */
@@ -808,4 +808,3 @@ private:
 };
 
 } // namespace hise
-
