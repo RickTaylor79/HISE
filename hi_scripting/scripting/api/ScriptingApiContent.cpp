@@ -3933,18 +3933,33 @@ ValueTree ScriptingApi::Content::ScriptAudioWaveform::exportAsValueTree() const
 
 void ScriptingApi::Content::ScriptAudioWaveform::restoreFromValueTree(const ValueTree &v)
 {
-	ComplexDataScriptComponent::restoreFromValueTree(v);
+	ScriptComponent::restoreFromValueTree(v);
 
 	if (auto af = getCachedAudioFile())
 	{
-		// Old versions of HISE used fileName instead of the data property for storing the file reference
-		if (v.hasProperty("fileName") && !v.hasProperty("data"))
-		{
-			af->fromBase64String(v.getProperty("fileName", "").toString());
-		}
+		auto dataString = v.getProperty("data", String()).toString();
+		auto legacyFileName = v.getProperty("fileName", "").toString();
+		auto useLegacyFileName = v.hasProperty("fileName") && !v.hasProperty("data");
+		auto range = Range<int>(v.getProperty("rangeStart", 0), v.getProperty("rangeEnd", 0));
+		auto target = af;
 
-		Range<int> range(v.getProperty("rangeStart", 0), v.getProperty("rangeEnd", 0));
-		af->setRange(range);
+		auto restoreWaveform = [target, dataString, legacyFileName, useLegacyFileName, range]()
+		{
+			if (target == nullptr)
+				return;
+
+			target->fromBase64String(useLegacyFileName ? legacyFileName : dataString);
+			target->setRange(range);
+		};
+
+		if (MessageManager::getInstance()->isThisTheMessageThread())
+		{
+			restoreWaveform();
+		}
+		else
+		{
+			MessageManager::callAsync(restoreWaveform);
+		}
 	}
 }
 
