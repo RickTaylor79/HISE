@@ -799,12 +799,16 @@ private:
 
 			currentSignal.sampleRate_cr = parent.getSampleRate() / HISE_CONTROL_RATE_DOWNSAMPLING_FACTOR;
 			currentSignal.numSamples_cr = parent.getLargestBlockSize() / HISE_CONTROL_RATE_DOWNSAMPLING_FACTOR;
+			currentSignal.modValueFunctions = {};
 
 			auto modChain = parent.getChildProcessor(ModulatorSynth::InternalChains::GainModulation);
 
 			for(int i = 0; i < modChain->getNumChildProcessors(); i++)
 			{
 				auto mod = modChain->getChildProcessor(i);
+
+				if (mod->isBypassed())
+					continue;
 
 				if(auto envelope = dynamic_cast<EnvelopeModulator*>(mod))
 					currentSignal.modValueFunctions[i] = getModFunction(parent.envelopeData, mod);
