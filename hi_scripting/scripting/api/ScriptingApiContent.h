@@ -901,12 +901,25 @@ public:
 
 			ScriptComponent& parent;
 		};
+
+		// Parameter metadata can be unavailable while the component tree is rebuilt.
+		struct DeferredParameterConnectionUpdater : public AsyncUpdater
+		{
+			DeferredParameterConnectionUpdater(ScriptComponent& p) :
+				parent(p)
+			{};
+
+			void handleAsyncUpdate() override;
+
+			ScriptComponent& parent;
+		};
         
         
 		struct GlobalCableConnection;
 
 		AsyncControlCallbackSender controlSender;
 		AsyncValueUpdater asyncValueUpdater;
+		DeferredParameterConnectionUpdater deferredParameterConnectionUpdater;
 
 		bool isPositionProperty(Identifier id) const;
 

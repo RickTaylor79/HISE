@@ -386,6 +386,7 @@ ScriptingApi::Content::ScriptComponent::ScriptComponent(ProcessorWithScriptingCo
 	parent(base->getScriptingContent()),
 	controlSender(this, base),
 	asyncValueUpdater(*this),
+	deferredParameterConnectionUpdater(*this),
 	propertyTree(name_.isValid() ? parent->getValueTreeForComponent(name) : ValueTree("Component")),
 	value(0.0),
 	NEW_AUTOMATION_WITH_COMMA(automationListener(base->getMainController_()->getRootDispatcher(), *this, BIND_MEMBER_FUNCTION_2(ScriptComponent::updateAutomation)))
@@ -878,7 +879,10 @@ void ScriptingApi::Content::ScriptComponent::setScriptObjectPropertyWithChangeMe
 		{
 			if (parameterName.isNotEmpty())
 			{
-				connectedParameterIndex = ProcessorHelpers::getParameterIndexFromProcessor(connectedProcessor, Identifier(parameterName));
+				if (connectedProcessor != nullptr && !connectedProcessor->hasInitialisedMetadata())
+					deferredParameterConnectionUpdater.triggerAsyncUpdate();
+				else
+					connectedParameterIndex = ProcessorHelpers::getParameterIndexFromProcessor(connectedProcessor, Identifier(parameterName));
 			}
 			else
 				connectedParameterIndex = -1;
@@ -1128,6 +1132,13 @@ void ScriptingApi::Content::ScriptComponent::changed()
 void ScriptingApi::Content::ScriptComponent::AsyncValueUpdater::handleAsyncUpdate()
 {
 	parent.sendValueListenerMessage();
+}
+
+void ScriptingApi::Content::ScriptComponent::DeferredParameterConnectionUpdater::handleAsyncUpdate()
+{
+	auto parameterName = parent.getScriptObjectProperty(parent.getIdFor(parameterId)).toString();
+	parent.connectedParameterIndex = ProcessorHelpers::getParameterIndexFromProcessor(parent.connectedProcessor, Identifier(parameterName));
+	parent.updateValueFromProcessorConnection();
 }
 
 
