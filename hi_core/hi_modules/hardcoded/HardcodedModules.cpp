@@ -212,10 +212,10 @@ void HardcodedMasterFX::prepareToPlay(double sampleRate, int samplesPerBlock)
 
 	SimpleReadWriteLock::ScopedReadLock sl(lock);
 
+	// Refresh connected modulation signals before the network checks their rates.
+	extraMods.prepareToPlay(sampleRate, samplesPerBlock);
 	auto ok = prepareOpaqueNode(opaqueNode.get());
 	errorBroadcaster.sendMessage(sendNotificationAsync, ok.getErrorMessage());
-
-	extraMods.prepareToPlay(sampleRate, samplesPerBlock);
 }
 
 juce::Path HardcodedMasterFX::getSpecialSymbol() const
@@ -420,11 +420,10 @@ void HardcodedPolyphonicFX::prepareToPlay(double sampleRate, int samplesPerBlock
 
 	VoiceEffectProcessor::prepareToPlay(sampleRate, samplesPerBlock);
 	SimpleReadWriteLock::ScopedReadLock sl(lock);
+	extraModSources.prepareToPlay(sampleRate, samplesPerBlock);
 	auto ok = prepareOpaqueNode(opaqueNode.get());
 
 	errorBroadcaster.sendMessage(sendNotificationAsync, ok.getErrorMessage());
-
-	extraModSources.prepareToPlay(sampleRate, samplesPerBlock);
 }
 
 void HardcodedPolyphonicFX::startVoice(int voiceIndex, const HiseEvent& e)
@@ -1066,11 +1065,10 @@ void HardcodedSynthesiser::prepareToPlay(double sampleRate, int samplesPerBlock)
 
 	
 	SimpleReadWriteLock::ScopedReadLock sl(HardcodedSwappableEffect::lock);
+	extraModSources.prepareToPlay(sampleRate, samplesPerBlock);
 	auto ok = prepareOpaqueNode(opaqueNode.get());
 
 	errorBroadcaster.sendMessage(sendNotificationAsync, ok.getErrorMessage());
-
-	extraModSources.prepareToPlay(sampleRate, samplesPerBlock);
 }
 
 Processor* HardcodedSynthesiser::getChildProcessor(int processorIndex)
